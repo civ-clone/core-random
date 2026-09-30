@@ -52,6 +52,7 @@ describe('Rng', (): void => {
     resumed.restore(99, 50);
 
     expect(resumed.calls()).to.equal(50);
+    expect(resumed.seed()).to.equal(99);
     expect(new Array(20).fill(0).map(() => resumed())).to.deep.equal(rest);
     expect(first).to.not.deep.equal(rest);
   });
@@ -70,6 +71,25 @@ describe('Rng', (): void => {
     resumed.restore(3, calls);
 
     expect(new Array(5).fill(0).map(() => resumed())).to.deep.equal(expected);
+  });
+
+  it('should report a position that resumes the same stream after a restore', (): void => {
+    // What a save relies on: it records `seed()` and `calls()`, and loading
+    // restores a fresh generator from them. This one is constructed on one seed
+    // and moved to another, as a seeded test run or a loaded game is.
+    const played = createRng(12345);
+
+    played.restore(1, 0);
+
+    new Array(30).fill(0).forEach(() => played());
+
+    const loaded = createRng(67890);
+
+    loaded.restore(played.seed(), played.calls());
+
+    expect(new Array(20).fill(0).map(() => loaded())).to.deep.equal(
+      new Array(20).fill(0).map(() => played())
+    );
   });
 
   it('should not interfere with another instance', (): void => {
