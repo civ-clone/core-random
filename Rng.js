@@ -23,7 +23,7 @@ const advance = (state) => {
  * the engine already accepts.
  */
 const createRng = (seed) => {
-    const initial = seed >>> 0;
+    let initial = seed >>> 0;
     let state = initial;
     let calls = 0;
     const rng = () => {
@@ -32,12 +32,16 @@ const createRng = (seed) => {
         return advance(state) / 4294967296;
     };
     rng.calls = () => calls;
+    // The seed of the stream this generator is *in*, which after `restore` is the
+    // restored one. A save records this, so reporting the construction seed here
+    // would make a save of a restored game resume a different stream.
     rng.seed = () => initial;
     // The state after n draws is `seed + n * INCREMENT` (mod 2^32), so a mid-game
     // position is reachable without replaying the draws. `Math.imul` does the
     // multiply in 32 bits, which matters: at a few million draws the plain
     // product exceeds the range JavaScript numbers hold exactly.
     rng.restore = (restoredSeed, restoredCalls) => {
+        initial = restoredSeed >>> 0;
         state = (restoredSeed + Math.imul(restoredCalls, INCREMENT)) >>> 0;
         calls = restoredCalls;
     };
