@@ -53,8 +53,10 @@ export const createRng = (seed: number): IRng => {
   // multiply in 32 bits, which matters: at a few million draws the plain
   // product exceeds the range JavaScript numbers hold exactly.
   rng.restore = (restoredSeed: number, restoredCalls: number): void => {
+    // From the normalised seed, as `createRng` does, so the stream is the one
+    // `seed()` reports.
     initial = restoredSeed >>> 0;
-    state = (restoredSeed + Math.imul(restoredCalls, INCREMENT)) >>> 0;
+    state = (initial + Math.imul(restoredCalls, INCREMENT)) >>> 0;
     calls = restoredCalls;
   };
 

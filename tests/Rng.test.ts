@@ -92,6 +92,26 @@ describe('Rng', (): void => {
     );
   });
 
+  it('should resume the same stream from the reported position after restoring a seed that is not a 32-bit unsigned integer', (): void => {
+    // `seed()` reports the seed normalised as `createRng` does, so the stream
+    // must be the normalised seed's too, or a save records a position the
+    // generator is not at.
+    [-0.5, -1, 1.5, 2 ** 32 + 7].forEach((seed: number): void => {
+      const played = createRng(0);
+
+      played.restore(seed, 1);
+
+      const loaded = createRng(0);
+
+      loaded.restore(played.seed(), played.calls());
+
+      expect(new Array(5).fill(0).map(() => loaded())).to.deep.equal(
+        new Array(5).fill(0).map(() => played()),
+        `seed ${seed}`
+      );
+    });
+  });
+
   it('should not interfere with another instance', (): void => {
     const a = createRng(1);
     const b = createRng(1);
